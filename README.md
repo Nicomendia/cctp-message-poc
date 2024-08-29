@@ -3,7 +3,9 @@
 
 ## Overview
 
-This example uses [web3.js](https://web3js.readthedocs.io/en/v1.8.1/getting-started.html) to send an arbitrary number from an address on ETH testnet to another address on AVAX testnet.
+This example uses [web3.js](https://web3js.readthedocs.io/en/v1.8.1/getting-started.html) to send an arbitrary number from ETH testnet to a contract deployed on AVAX testnet.
+
+The contracts deployed can be seen, as a reference, in [this section](./reference/contracts/README.md).
 
 ### Prerequisite
 The script requires [Node.js](https://nodejs.org/en/download/) installed.

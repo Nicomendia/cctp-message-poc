@@ -1,9 +1,9 @@
 
-# Quickstart: Cross-chain USDC Transfer
+# Quickstart: Cross-chain Number Messenger
 
 ## Overview
 
-This example uses [web3.js](https://web3js.readthedocs.io/en/v1.8.1/getting-started.html) to transfer USDC from an address on ETH testnet to another address on AVAX testnet.
+This example uses [web3.js](https://web3js.readthedocs.io/en/v1.8.1/getting-started.html) to send an arbitrary number from an address on ETH testnet to another address on AVAX testnet.
 
 ### Prerequisite
 The script requires [Node.js](https://nodejs.org/en/download/) installed.
@@ -17,32 +17,27 @@ The script requires [Node.js](https://nodejs.org/en/download/) installed.
     ETH_PRIVATE_KEY=<ADD_ORIGINATING_ADDRESS_PRIVATE_KEY>
     AVAX_PRIVATE_KEY=<ADD_RECEIPIENT_ADDRESS_PRIVATE_KEY>
     RECIPIENT_ADDRESS=<ADD_RECEIPIENT_ADDRESS_FOR_AVAX>
-    AMOUNT=<ADD_AMOUNT_TO_BE_TRANSFERED>
+    NUMBER=<ADD_NUMBER_TO_BE_SENT>
     ```
 3. Run the script by running `npm run start`
 
 ## Script Details
-The script has 5 steps:
-1. First step approves `ETH_TOKEN_MESSENGER_CONTRACT_ADDRESS` to withdraw USDC from our eth address.
+The script has 4 steps:
+1. First step executes `sendNumber` function on `NumberTransmitterContract` deployed in [Sepolia testnet](https://sepolia.etherscan.io/address/0xd199bfCd4AFA63612808b494Db39564fE753e2F0)
     ```js
-    const approveTx = await usdcEthContract.methods.approve(ETH_TOKEN_MESSENGER_CONTRACT_ADDRESS, amount).send({gas: approveTxGas})
+    const sendNumberTx = await ethNumberTransmitterContract.methods.sendNumber(number, AVAX_DESTINATION_DOMAIN, destinationNumberTransmitterInBytes32).send();
     ```
 
-2. Second step executes `depositForBurn` function on `TokenMessengerContract` deployed in [Sepolia testnet](https://sepolia.etherscan.io/address/0x9f3B8679c73C2Fef8b59B4f3444d4e156fb70AA5)
+2. Second step extracts `messageBytes` emitted by `MessageSent` event from `sendNumber` transaction logs and hashes the retrieved `messageBytes` using `keccak256` hashing algorithm
     ```js
-    const burnTx = await ethTokenMessengerContract.methods.depositForBurn(amount, AVAX_DESTINATION_DOMAIN, destinationAddressInBytes32, USDC_ETH_CONTRACT_ADDRESS).send();
-    ``` 
-
-3. Third step extracts `messageBytes` emitted by `MessageSent` event from `depositForBurn` transaction logs and hashes the retrieved `messageBytes` using `keccak256` hashing algorithm
-    ```js
-    const transactionReceipt = await web3.eth.getTransactionReceipt(burnTx.transactionHash);
+    const transactionReceipt = await web3.eth.getTransactionReceipt(sendNumberTx.transactionHash);
     const eventTopic = web3.utils.keccak256('MessageSent(bytes)')
     const log = transactionReceipt.logs.find((l) => l.topics[0] === eventTopic)
     const messageBytes = web3.eth.abi.decodeParameters(['bytes'], log.data)[0]
     const messageHash = web3.utils.keccak256(messageBytes);
     ```
 
-4. Fourth step polls the attestation service to acquire signature using the `messageHash` from previous step.
+3. Third step polls the attestation service to acquire signature using the `messageHash` from previous step.
     ```js
     let attestationResponse = {status: 'pending'};
     while(attestationResponse.status != 'complete') {
@@ -52,7 +47,7 @@ The script has 5 steps:
     }
     ```
 
-5. Last step calls `receiveMessage` function on `MessageTransmitterContract` deployed in [Avalanche Fuji Network](https://testnet.snowtrace.io/address/0xa9fb1b3009dcb79e2fe346c16a604b8fa8ae0a79) to receive USDC at AVAX address.
+4. Last step calls `receiveMessage` function on `MessageTransmitterContract` deployed in [Avalanche Fuji Network](https://testnet.snowtrace.io/address/0xa9fb1b3009dcb79e2fe346c16a604b8fa8ae0a79) to set the provided number at AVAX `NumberTransmitterContract` also deployed in [Avalanche Fuji Network](https://testnet.snowtrace.io/address/0xfC6919769aF594Bc89E766CAe911E836cdF467F1).
 
     *Note: The attestation service is rate-limited, please limit your requests to less than 1 per second.*
     ```js

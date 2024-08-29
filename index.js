@@ -80,7 +80,7 @@ const main = async() => {
     const attestationSignature = attestationResponse.attestation;
     console.log(`Signature: ${attestationSignature}`)
 
-    // STEP 4: Using the message bytes and signature recieve the funds on destination chain and address
+    // STEP 4: Using the message bytes and signature recieve the new number to be settled on destination chain
     web3.setProvider(process.env.AVAX_TESTNET_RPC); // Connect web3 to AVAX testnet
     const receiveTxGas = await avaxMessageTransmitterContract.methods.receiveMessage(messageBytes, attestationSignature).estimateGas();
     const receiveTx = await avaxMessageTransmitterContract.methods.receiveMessage(messageBytes, attestationSignature).send({gas: receiveTxGas});
